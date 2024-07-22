@@ -5,7 +5,9 @@ const errorHandler = (error, request, response, next) => {
       return response.status(400).send({ error: error.message })
     } else if (error.name === 'CastError') {
       return response.status(400).send({ error: 'malformatted id' })
-    } 
+    } else if (error.message.includes('on year failed')) {
+      return response.status(400).send({ error: error.message })
+    }
   
     next(error)
   }

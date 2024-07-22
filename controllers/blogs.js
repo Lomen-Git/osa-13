@@ -1,28 +1,9 @@
 // Reittien käsittely
 const router = require('express').Router()
 const { Blog, User } = require('../models/index')
-const jwt = require('jsonwebtoken')
-const { SECRET } = require('../util/config')
 const { Op } = require('sequelize')
-
-// MW vai funktio?
-const tokenExtractor = (req, res, next) => {
-  const authorization = req.get('authorization')
-  console.log(`taala ollaan ja auth on muuten: ${authorization}`)
-  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-    try {
-      console.log(`Ollaanko täälä: (token: ${authorization.substring(7)}`)
-      // Tarkastetaan token
-      req.decodedToken = jwt.verify(authorization.substring(7), SECRET)
-    } catch (error){
-      console.log(error)
-      return res.status(401).json({ error: 'token invalid' })
-    }
-  } else {
-    return res.status(401).json({ error: 'token missing' })
-  }
-  next()
-}
+const tokenExtractor = require('../customMW/tokenExtractor')
+const sessionExtractor = require('../customMW/sessionExtractor')
 
 
 router.get('/', async (req, res, next) => {
@@ -48,9 +29,9 @@ router.get('/', async (req, res, next) => {
     }
 })
 
-router.post('/', tokenExtractor, async (req, res, next) => {
+router.post('/', sessionExtractor, async (req, res, next) => {
     try {
-        const user = await User.findByPk(req.decodedToken.id)
+        const user = req.user
         const blog = await Blog.create({...req.body, userId: user.id })
         return res.json(blog)
     } catch (error) {
@@ -58,7 +39,7 @@ router.post('/', tokenExtractor, async (req, res, next) => {
     }
 })
 
-router.get(':id', async (req, res, next) => {
+router.get('/:id', async (req, res, next) => {
     try {
         const blog = await Blog.findByPk(req.params.id)
         if (blog) {
@@ -71,7 +52,7 @@ router.get(':id', async (req, res, next) => {
     }
 })
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req, res, next) => {
     try {
         const blog = await Blog.findByPk(req.params.id)
         if (blog) {
@@ -86,9 +67,9 @@ router.put('/:id', async (req, res) => {
     }
   })
 
-router.delete('/:id', tokenExtractor, async (req, res, next) => {
+router.delete('/:id', sessionExtractor, async (req, res, next) => {
     try {
-      const user = await User.findByPk(req.decodedToken.id)
+      const user = req.user
       const blog = await Blog.findByPk(req.params.id)
 
         if (blog && (blog.userId === user.id)) {

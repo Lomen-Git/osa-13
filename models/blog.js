@@ -12,7 +12,7 @@ Blog.init({
   },
   author: {
     type: DataTypes.TEXT,
-    allowNull: true
+    allowNull: false
   },
   url: {
     type: DataTypes.TEXT,
@@ -26,11 +26,19 @@ Blog.init({
     type: DataTypes.INTEGER,
     allowNull: true,
     defaultValue: 0
+  },
+  year: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    validate: {
+      min: 1990,
+      max: new Date().getFullYear()
+    }
   }
 }, {
   sequelize,
   underscored: true,
-  timestamps: false,
+  timestamps: true,
   modelName: 'blog'
 })
 

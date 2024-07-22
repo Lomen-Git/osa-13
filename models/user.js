@@ -21,6 +21,11 @@ User.init({
   name: {
     type: DataTypes.STRING,
   },
+  isDisabled: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+  }
 }, {
   sequelize,
   underscored: true,
